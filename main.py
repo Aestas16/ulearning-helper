@@ -3,6 +3,7 @@ import utils
 import json
 import yaml
 import requests
+import time
 
 config = {}
 user_info = {}
@@ -101,3 +102,7 @@ with open('config.yaml') as f:
 
 user_info = login()
 course_list = get_course_list()
+
+while True:
+    check_activity(course_list)
+    time.sleep(config['interval'] / 1000)
