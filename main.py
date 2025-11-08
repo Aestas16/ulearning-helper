@@ -63,12 +63,38 @@ def get_activity_list(courseID: int):
     resp_json = resp.json()
     return resp_json['otherActivityDTOList']
 
+def checkin_by_location(attendanceID: int, classID: int):
+    data = json.dumps({
+        'attendanceID': attendanceID,
+        'classID': classID,
+        'userID': user_info['userID'],
+        'location': config['location'],
+        'address': config['address'],
+        'enterWay': '1',
+        'attendanceCode': ''
+    }, separators = (',', ':'))
+    resp = requests.post('https://apps.ulearning.cn/newAttendance/signByStu',
+        data = data,
+        headers = {
+            'User-Agent': config['UA'],
+            'Authorization': user_info['token'],
+            'Content-Type': 'application/json'
+        }
+    )
+    resp_json = resp.json()
+    print(resp_json)
+    if resp_json['status'] == 200:
+        print('签到成功')
+    else:
+        print(f'签到失败：{resp_json['message']}')
+
 def check_activity(course_list):
     for course in course_list:
         activity_list = get_activity_list(course['id'])
         for activity in activity_list:
             if activity['status'] == 2 and activity['personStatus'] == 0:
                 print(f"课程 {course['name']} 正在进行 {activity['title']}")
+                checkin_by_location(activity['relationId'], course['classId'])
 
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
