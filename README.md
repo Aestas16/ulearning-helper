@@ -33,3 +33,4 @@ python main.py
 ```
 ## Todo
 - QR-code check-in
+- Multiple account check-in
