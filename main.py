@@ -63,6 +63,13 @@ def get_activity_list(courseID: int):
     resp_json = resp.json()
     return resp_json['otherActivityDTOList']
 
+def check_activity(course_list):
+    for course in course_list:
+        activity_list = get_activity_list(course['id'])
+        for activity in activity_list:
+            if activity['status'] == 2 and activity['personStatus'] == 0:
+                print(f"课程 {course['name']} 正在进行 {activity['title']}")
+
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
 
