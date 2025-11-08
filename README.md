@@ -1,5 +1,5 @@
 # ulearning-helper
-Automatically check in without any assistance from your classmates.
+Automatically check-in without any assistance from your classmates.
 
 QR-code check-in has not supported yet. (working...)
 ## Install
@@ -31,3 +31,5 @@ After installation and configuration, run
 ```bash
 python main.py
 ```
+## Todo
+- QR-code check-in
