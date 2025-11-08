@@ -53,6 +53,16 @@ def get_course_list():
     resp_json = resp.json()
     return resp_json['courseList']
 
+def get_activity_list(courseID: int):
+    resp = requests.get(f'https://courseapi.ulearning.cn/appHomeActivity/v4/{courseID}',
+        headers = {
+            'User-Agent': config['UA'],
+            'Authorization': user_info['token']
+        }
+    )
+    resp_json = resp.json()
+    return resp_json['otherActivityDTOList']
+
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
 
