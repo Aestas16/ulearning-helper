@@ -87,15 +87,19 @@ def checkin_by_location(attendanceID: int, classID: int):
     if resp_json['status'] == 200:
         print('签到成功')
     else:
-        print(f'签到失败：{resp_json['message']}')
+        print(f'签到失败：{resp_json["message"]}')
 
 def check_activity(course_list):
+    flag = False
     for course in course_list:
         activity_list = get_activity_list(course['id'])
         for activity in activity_list:
             if activity['status'] == 2 and activity['personStatus'] == 0:
                 print(f"课程 {course['name']} 正在进行 {activity['title']}")
                 checkin_by_location(activity['relationId'], course['classId'])
+                flag = True
+    if flag == False:
+        print('暂无签到')
 
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
