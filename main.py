@@ -43,7 +43,18 @@ def login():
     login_result = login_resp.json()['result']
     return utils.decode_result(login_result)
 
+def get_course_list():
+    resp = requests.get('https://courseapi.ulearning.cn/courses/students?publishStatus=1&pn=1&ps=20&type=1',
+        headers = {
+            'User-Agent': config['UA'],
+            'Authorization': user_info['token']
+        }
+    )
+    resp_json = resp.json()
+    return resp_json['courseList']
+
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
 
 user_info = login()
+course_list = get_course_list()
