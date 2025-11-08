@@ -4,6 +4,7 @@ import json
 import yaml
 import requests
 import time
+import os
 
 config = {}
 user_info = {}
@@ -32,37 +33,50 @@ def get_login_post_body(username: str, password: str):
 
 def login():
     login_post_body = get_login_post_body(config['username'], config['password'])
-    login_resp = requests.post('https://apps.ulearning.cn/login/v2',
-        data = login_post_body, 
-        headers = {
-            'User-Agent': config['UA'],
-            'Content-Type': 'application/json',
-            'uversion': '2'
-        }
-    )
 
-    login_result = login_resp.json()['result']
-    return utils.decode_result(login_result)
+    try:
+        login_resp = requests.post('https://apps.ulearning.cn/login/v2',
+            data = login_post_body, 
+            headers = {
+                'User-Agent': config['UA'],
+                'Content-Type': 'application/json',
+                'uversion': '2'
+            }
+        )
+        resp_json = login_resp.json()
+        login_result = resp_json['result']
+        return utils.decode_result(login_result)
+    except Exception as e:
+        print(f'登录时发生错误：{e}')
+        exit(0)
 
 def get_course_list():
-    resp = requests.get('https://courseapi.ulearning.cn/courses/students?publishStatus=1&pn=1&ps=20&type=1',
-        headers = {
-            'User-Agent': config['UA'],
-            'Authorization': user_info['token']
-        }
-    )
-    resp_json = resp.json()
-    return resp_json['courseList']
+    try:
+        resp = requests.get('https://courseapi.ulearning.cn/courses/students?publishStatus=1&pn=1&ps=20&type=1',
+            headers = {
+                'User-Agent': config['UA'],
+                'Authorization': user_info['token']
+            }
+        )
+        resp_json = resp.json()
+        return resp_json['courseList']
+    except Exception as e:
+        print(f'获取课程列表时发生错误：{e}')
+        return []
 
 def get_activity_list(courseID: int):
-    resp = requests.get(f'https://courseapi.ulearning.cn/appHomeActivity/v4/{courseID}',
-        headers = {
-            'User-Agent': config['UA'],
-            'Authorization': user_info['token']
-        }
-    )
-    resp_json = resp.json()
-    return resp_json['otherActivityDTOList']
+    try:
+        resp = requests.get(f'https://courseapi.ulearning.cn/appHomeActivity/v4/{courseID}',
+            headers = {
+                'User-Agent': config['UA'],
+                'Authorization': user_info['token']
+            }
+        )
+        resp_json = resp.json()
+        return resp_json['otherActivityDTOList']
+    except Exception as e:
+        print(f'获取课堂活动时发生错误：{e}')
+        return []
 
 def checkin_by_location(attendanceID: int, classID: int):
     data = json.dumps({
@@ -74,20 +88,23 @@ def checkin_by_location(attendanceID: int, classID: int):
         'enterWay': '1',
         'attendanceCode': ''
     }, separators = (',', ':'))
-    resp = requests.post('https://apps.ulearning.cn/newAttendance/signByStu',
-        data = data,
-        headers = {
-            'User-Agent': config['UA'],
-            'Authorization': user_info['token'],
-            'Content-Type': 'application/json'
-        }
-    )
-    resp_json = resp.json()
-    print(resp_json)
-    if resp_json['status'] == 200:
-        print('签到成功')
-    else:
-        print(f'签到失败：{resp_json["message"]}')
+
+    try:
+        resp = requests.post('https://apps.ulearning.cn/newAttendance/signByStu',
+            data = data,
+            headers = {
+                'User-Agent': config['UA'],
+                'Authorization': user_info['token'],
+                'Content-Type': 'application/json'
+            }
+        )
+        resp_json = resp.json()
+        if resp_json['status'] == 200:
+            print('签到成功')
+        else:
+            print(f'签到失败：{resp_json["message"]}')
+    except Exception as e:
+        print(f'签到时发生错误：{e}')
 
 def check_activity(course_list):
     flag = False
@@ -101,8 +118,12 @@ def check_activity(course_list):
     if flag == False:
         print('暂无签到')
 
-with open('config.yaml') as f:
-    config = yaml.safe_load(f)
+if not os.path.exists('config.yaml'):
+    print('config.yaml 不存在')
+    exit(0)
+else:
+    with open('config.yaml') as f:
+        config = yaml.safe_load(f)
 
 user_info = login()
 course_list = get_course_list()
