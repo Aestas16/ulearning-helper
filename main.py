@@ -78,6 +78,48 @@ def get_activity_list(courseID: int):
         print(f'获取课堂活动时发生错误：{e}')
         return []
 
+def get_attendance_code(attendanceID: int):
+    try:
+        resp = requests.get(f'https://apps.ulearning.cn/newAttendance/getAttendanceCode/{attendanceID}',
+            headers = {
+                'User-Agent': config['UA'],
+                'Authorization': user_info['token']
+            }
+        )
+        return resp.text.strip().strip('"')
+    except Exception as e:
+        print(f'获取签到码时发生错误：{e}')
+        return ''
+
+def checkin_by_qrcode(attendanceID: int, classID: int):
+    attendance_code = get_attendance_code(attendanceID)
+    if attendance_code == '':
+        return
+
+    data = json.dumps({
+        'attendanceID': attendanceID,
+        'userID': user_info['userID'],
+        'classID': classID,
+        'attendanceCode': attendance_code
+    }, separators = (',', ':'))
+
+    try:
+        resp = requests.post('https://apps.ulearning.cn/newAttendance/signByStu',
+            data = data,
+            headers = {
+                'User-Agent': config['UA'],
+                'Authorization': user_info['token'],
+                'Content-Type': 'application/json'
+            }
+        )
+        resp_json = resp.json()
+        if resp_json['status'] == 200:
+            print('签到成功')
+        else:
+            print(f'签到失败：{resp_json["message"]}')
+    except Exception as e:
+        print(f'签到时发生错误：{e}')
+
 def checkin_by_location(attendanceID: int, classID: int):
     data = json.dumps({
         'attendanceID': attendanceID,
@@ -111,9 +153,12 @@ def check_activity(course_list):
     for course in course_list:
         activity_list = get_activity_list(course['id'])
         for activity in activity_list:
-            if activity['status'] == 2 and activity['personStatus'] == 0:
+            if activity['relationType'] in {0, 1} and activity['status'] == 2 and activity['personStatus'] == 0:
                 print(f"课程 {course['name']} 正在进行 {activity['title']}")
-                checkin_by_location(activity['relationId'], course['classId'])
+                if activity['relationType'] == 1:
+                    checkin_by_qrcode(activity['relationId'], course['classId'])
+                else:
+                    checkin_by_location(activity['relationId'], course['classId'])
                 flag = True
     if flag == False:
         print('暂无签到')
