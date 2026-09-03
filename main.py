@@ -78,6 +78,19 @@ def get_activity_list(courseID: int):
         print(f'获取课堂活动时发生错误：{e}')
         return []
 
+def get_attendance_info(attendanceID: int):
+    try:
+        resp = requests.get(f'https://apps.ulearning.cn/newAttendance/getAttendanceForStu/{attendanceID}/{user_info["userID"]}',
+            headers = {
+                'User-Agent': config['UA'],
+                'Authorization': user_info['token']
+            }
+        )
+        return resp.json()
+    except Exception as e:
+        print(f'获取签到信息时发生错误：{e}')
+        return {}
+
 def get_attendance_code(attendanceID: int):
     try:
         resp = requests.get(f'https://apps.ulearning.cn/newAttendance/getAttendanceCode/{attendanceID}',
@@ -153,9 +166,10 @@ def check_activity(course_list):
     for course in course_list:
         activity_list = get_activity_list(course['id'])
         for activity in activity_list:
-            if activity['relationType'] in {0, 1} and activity['status'] == 2 and activity['personStatus'] == 0:
+            if activity['relationType'] == 1 and activity['status'] == 2 and activity['personStatus'] == 0:
                 print(f"课程 {course['name']} 正在进行 {activity['title']}")
-                if activity['relationType'] == 1:
+                attendance_info = get_attendance_info(activity['relationId'])
+                if attendance_info['type'] == 1:
                     checkin_by_qrcode(activity['relationId'], course['classId'])
                 else:
                     checkin_by_location(activity['relationId'], course['classId'])
