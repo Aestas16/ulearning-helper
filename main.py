@@ -168,12 +168,15 @@ def check_activity(course_list):
         for activity in activity_list:
             if activity['relationType'] == 1 and activity['status'] == 2 and activity['personStatus'] == 0:
                 print(f"课程 {course['name']} 正在进行 {activity['title']}")
+                flag = True
                 attendance_info = get_attendance_info(activity['relationId'])
-                if attendance_info['type'] == 1:
+                attendance_type = attendance_info.get('type')
+                if attendance_type is None:
+                    continue
+                if attendance_type == 1:
                     checkin_by_qrcode(activity['relationId'], course['classId'])
                 else:
                     checkin_by_location(activity['relationId'], course['classId'])
-                flag = True
     if flag == False:
         print('暂无签到')
 
